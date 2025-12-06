@@ -3,9 +3,19 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Platform AI untuk Online Seller Indonesia",
-  "author": "Your Name",
+  "description": "Platform AI untuk Online Seller Indonesia - Membantu seller di Shopee, Tokopedia, Lazada, TikTok Shop",
+  "author": "SellerAI Pro Team",
   "license": "MIT",
+  "keywords": [
+    "seller",
+    "online shop",
+    "ai platform",
+    "e-commerce",
+    "shopee",
+    "tokopedia",
+    "lazada",
+    "tiktok shop"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -22,8 +32,16 @@
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "vite": "^5.0.8"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }
