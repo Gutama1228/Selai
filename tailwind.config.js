@@ -32,13 +32,34 @@ export default {
           900: '#581c87',
         }
       },
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      },
       animation: {
         'bounce-slow': 'bounce 2s infinite',
         'pulse-slow': 'pulse 3s infinite',
+        'spin-slow': 'spin 3s linear infinite',
+        'fade-in': 'fadeIn 0.5s ease-in',
+        'slide-in': 'slideIn 0.3s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideIn: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(0)' },
+        }
       },
       boxShadow: {
         'inner-lg': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
         'glow': '0 0 15px rgba(102, 126, 234, 0.5)',
+        'glow-lg': '0 0 30px rgba(102, 126, 234, 0.7)',
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       }
     },
   },
