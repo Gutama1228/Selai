@@ -16,6 +16,7 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -35,13 +36,33 @@ dist-ssr
 build
 .vite
 *.tsbuildinfo
+.turbo
 
 # OS files
 Thumbs.db
 .DS_Store
+*.swp
+*.swo
+*~
 
 # Testing
 coverage
+.nyc_output
+*.lcov
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.sublime-project
+*.sublime-workspace
 
 # Misc
 *.pem
+.vercel
+.netlify
+
+# Lock files (optional - keep one that you use)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
