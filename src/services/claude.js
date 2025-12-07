@@ -1,13 +1,19 @@
-// Claude AI Service for all AI features
+// src/services/claude.js
+// AI Service using Claude API (Anthropic)
 
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
-const CLAUDE_MODEL = import.meta.env.VITE_CLAUDE_MODEL || 'claude-sonnet-4-20250514';
+const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 /**
- * Make request to Claude API
+ * Chat with AI Assistant
  */
-const makeClaudeRequest = async (prompt, maxTokens = 1000) => {
+export const chatWithAI = async (message, conversationHistory = []) => {
   try {
+    const messages = [
+      ...conversationHistory,
+      { role: 'user', content: message }
+    ];
+
     const response = await fetch(CLAUDE_API_URL, {
       method: 'POST',
       headers: {
@@ -15,409 +21,499 @@ const makeClaudeRequest = async (prompt, maxTokens = 1000) => {
       },
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: maxTokens,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
+        max_tokens: 2000,
+        messages: messages,
+        system: `Kamu adalah AI Assistant untuk SellerAI Pro, platform yang membantu seller online shop Indonesia.
+
+Tugasmu:
+- Membantu seller dengan strategi penjualan dan marketing
+- Memberikan tips optimasi produk dan deskripsi
+- Menjawab pertanyaan tentang bisnis online
+- Memberikan analisis trend pasar
+- Tips customer service dan handling komplain
+- Saran pricing dan promosi
+
+Selalu jawab dalam Bahasa Indonesia yang ramah dan profesional. Berikan jawaban yang praktis, actionable, dan mudah dipahami. Gunakan emoji secara natural untuk membuat percakapan lebih friendly.`
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status}`);
+      throw new Error(`API Error: ${response.status}`);
     }
 
     const data = await response.json();
-    return { data: data.content[0].text, error: null };
+    
+    const aiMessage = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
+
+    return {
+      data: {
+        message: aiMessage,
+        conversationHistory: [
+          ...messages,
+          { role: 'assistant', content: aiMessage }
+        ]
+      },
+      error: null
+    };
   } catch (error) {
-    console.error('Claude API error:', error);
-    return { data: null, error: error.message };
+    console.error('AI Chat Error:', error);
+    
+    // Fallback response
+    return {
+      data: {
+        message: getFallbackResponse(message),
+        conversationHistory: [
+          ...conversationHistory,
+          { role: 'user', content: message },
+          { role: 'assistant', content: getFallbackResponse(message) }
+        ]
+      },
+      error: null
+    };
   }
 };
 
-// ==========================================
-// AI CHAT FUNCTIONS
-// ==========================================
-
 /**
- * Send chat message to AI
+ * Generate product description with AI
  */
-export const sendChatMessage = async (message, context = '') => {
-  const prompt = `Kamu adalah AI assistant profesional untuk seller online shop di Indonesia. 
-Tugasmu adalah membantu seller meningkatkan penjualan mereka dengan memberikan saran yang actionable, spesifik, dan relevan.
+export const generateProductDescription = async (productInfo) => {
+  try {
+    const prompt = `Generate deskripsi produk yang menarik dan SEO-friendly dalam Bahasa Indonesia untuk:
 
-${context ? `Context: ${context}` : ''}
+Nama Produk: ${productInfo.name}
+Kategori: ${productInfo.category || 'Umum'}
+Harga: Rp ${productInfo.price?.toLocaleString('id-ID') || '-'}
+Platform: ${productInfo.platform || '-'}
+${productInfo.features ? `Fitur: ${productInfo.features}` : ''}
+${productInfo.targetAudience ? `Target Pembeli: ${productInfo.targetAudience}` : ''}
 
-Pertanyaan dari seller: ${message}
+Buat deskripsi yang:
+1. Opening hook yang menarik perhatian
+2. Penjelasan manfaat utama produk (bukan hanya fitur)
+3. Spesifikasi lengkap dalam bullet points
+4. Social proof atau trust signals
+5. Call to action yang persuasif
+6. SEO-friendly dengan keyword natural
 
-Berikan jawaban yang:
-1. Langsung to the point
-2. Mudah dipahami
-3. Actionable (bisa langsung diterapkan)
-4. Berikan contoh konkret jika perlu
-5. Gunakan bahasa Indonesia yang friendly
+Format:
+- Paragraf pembuka (2-3 kalimat)
+- Manfaat utama (3-5 poin)
+- Spesifikasi detail
+- Paragraf penutup dengan CTA
 
-Jawab:`;
+Panjang ideal: 200-300 kata. Gunakan emoji secara natural.`;
 
-  return await makeClaudeRequest(prompt, 1500);
+    const response = await fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const description = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
+
+    return { data: { description }, error: null };
+  } catch (error) {
+    console.error('Generate Description Error:', error);
+    
+    // Fallback template
+    return {
+      data: { description: getDescriptionTemplate(productInfo) },
+      error: null
+    };
+  }
 };
 
-// ==========================================
-// PRODUCT DESCRIPTION GENERATOR
-// ==========================================
-
 /**
- * Generate product description
+ * Generate image suggestions for product photos
  */
-export const generateProductDescription = async (productName, platform, category = '', specs = '') => {
-  const prompt = `Buatkan deskripsi produk yang SANGAT MENARIK dan PERSUASIF untuk "${productName}" yang akan dijual di platform ${platform}.
+export const generateImageSuggestions = async (productInfo) => {
+  try {
+    const prompt = `Berikan 5 saran foto produk e-commerce yang menarik dan profesional untuk:
 
-${category ? `Kategori: ${category}` : ''}
-${specs ? `Spesifikasi: ${specs}` : ''}
+Produk: ${productInfo.name}
+Kategori: ${productInfo.category || 'Umum'}
+Platform: ${productInfo.platform || 'Multi-platform'}
 
-Format yang harus kamu buat:
+Untuk setiap saran, jelaskan:
+1. Jenis foto (Hero Shot, Detail, Lifestyle, dll)
+2. Angle dan komposisi
+3. Background dan lighting
+4. Props yang dibutuhkan (jika ada)
+5. Tips eksekusi
 
-📌 JUDUL PRODUK (catchy & SEO-friendly)
-Buat judul yang menarik perhatian dan mengandung keyword penting.
+Format: Numbered list dengan penjelasan detail tapi concise untuk setiap poin.`;
 
-📝 DESKRIPSI UTAMA
-Paragraf pembuka yang powerful dan membuat orang tertarik (2-3 kalimat).
+    const response = await fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-✨ KEUNGGULAN PRODUK
-• Keunggulan 1 - Jelaskan benefit untuk pembeli
-• Keunggulan 2 - Fokus pada solusi masalah
-• Keunggulan 3 - Highlight unique selling point
-• Keunggulan 4 - Tambahkan social proof jika relevan
-(minimal 4-6 keunggulan)
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
 
-📦 SPESIFIKASI
-Tulis spesifikasi lengkap dalam format yang rapi dan mudah dibaca.
+    const data = await response.json();
+    const suggestions = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
 
-💯 KENAPA HARUS BELI DI TOKO KAMI?
-• Garansi resmi
-• Pengiriman cepat
-• Harga terbaik
-• Customer service responsive
-(sesuaikan dengan benefit toko)
-
-🔥 CALL TO ACTION
-Kalimat persuasif yang mendorong pembeli untuk checkout sekarang.
-
-#️⃣ HASHTAG
-Berikan 8-12 hashtag yang relevan untuk SEO di marketplace.
-
-PENTING:
-- Gunakan emoji yang relevan untuk menarik perhatian
-- Tulis dalam bahasa Indonesia yang persuasif
-- Fokus pada benefit, bukan hanya fitur
-- Buat pembeli merasa "HARUS BELI SEKARANG"
-- Optimalkan untuk SEO marketplace
-
-Buatkan sekarang:`;
-
-  return await makeClaudeRequest(prompt, 2000);
+    return { data: { suggestions }, error: null };
+  } catch (error) {
+    console.error('Generate Image Suggestions Error:', error);
+    
+    return {
+      data: { suggestions: getImageSuggestionsTemplate(productInfo.category) },
+      error: null
+    };
+  }
 };
-
-// ==========================================
-// IMAGE SUGGESTIONS GENERATOR
-// ==========================================
-
-/**
- * Generate image suggestions for product
- */
-export const generateImageSuggestions = async (productName, category = '') => {
-  const prompt = `Sebagai fotografer produk profesional, berikan saran LENGKAP dan DETAIL untuk membuat foto produk "${productName}"${category ? ` (kategori: ${category})` : ''} yang SEMPURNA untuk dijual di e-commerce.
-
-Berikan panduan dalam format:
-
-📸 KONSEP FOTO (3-5 angle berbeda)
-Jelaskan setiap angle dengan detail:
-1. [Nama angle] - Deskripsi lengkap posisi kamera dan objek
-2. [Nama angle] - ...
-dst
-
-💡 LIGHTING SETUP
-- Jenis cahaya yang ideal (natural/studio/kombinasi)
-- Posisi cahaya utama
-- Pencahayaan tambahan yang dibutuhkan
-- Tips menghindari shadow yang buruk
-
-🎨 BACKGROUND & PROPS
-- Warna background yang cocok (berikan 2-3 pilihan)
-- Props pendukung yang bisa digunakan
-- Konsep styling yang menarik
-- Tips komposisi visual
-
-📐 KOMPOSISI & FRAMING
-- Rule of thirds
-- Spacing & margins
-- Focus point
-- Depth of field suggestions
-
-✨ TIPS EDITING
-- Color grading yang cocok
-- Brightness & contrast adjustments
-- Retouching areas
-- Format & size untuk marketplace
-
-🎯 DO's & DON'Ts
-DO:
-• [Tip 1]
-• [Tip 2]
-• [Tip 3]
-
-DON'T:
-• [Tip 1]
-• [Tip 2]
-• [Tip 3]
-
-💰 BUDGET OPTIONS
-- Low budget setup (HP + DIY)
-- Medium budget setup
-- Professional setup
-
-Berikan saran yang:
-- Praktis dan bisa diterapkan langsung
-- Sesuai dengan standar marketplace Indonesia
-- Meningkatkan conversion rate
-- Budget-friendly tapi tetap profesional
-
-Jawab dalam bahasa Indonesia:`;
-
-  return await makeClaudeRequest(prompt, 2000);
-};
-
-// ==========================================
-// TREND ANALYSIS
-// ==========================================
 
 /**
  * Analyze market trends
  */
-export const analyzeTrends = async (category, platform = 'all') => {
-  const prompt = `Sebagai market analyst e-commerce Indonesia, berikan analisis TREND TERKINI untuk kategori "${category}"${platform !== 'all' ? ` di platform ${platform}` : ' di berbagai platform (Shopee, Tokopedia, Lazada, TikTok Shop)'}.
+export const analyzeTrends = async (category, keywords = [], platform = '') => {
+  try {
+    const prompt = `Analisis trend pasar e-commerce Indonesia untuk:
 
-Analisis harus mencakup:
-
-📊 TREND PRODUK TERPOPULER
-1. [Nama produk/niche] - Alasan trending
-2. [Nama produk/niche] - ...
-3. dst (minimal 5 produk)
-
-📈 INSIGHT PENJUALAN
-- Produk yang sedang naik daun
-- Produk yang mulai menurun
-- Seasonal patterns
-- Price range yang paling laku
-
-🎯 TARGET MARKET
-- Demografi pembeli utama
-- Behavioral patterns
-- Pain points yang bisa disolve
-- Preferred shopping times
-
-💡 STRATEGI REKOMENDASI
-1. **Produk yang Harus Dijual**
-   - [Produk A] - Alasan & potential profit
-   - [Produk B] - ...
-
-2. **Strategi Pricing**
-   - Price range optimal
-   - Discount strategies
-   - Bundle recommendations
-
-3. **Marketing Tips**
-   - Content ideas
-   - Hashtag suggestions
-   - Best posting times
-   - Competitor analysis
-
-4. **Inventory Planning**
-   - Stock recommendations
-   - Best suppliers tips
-   - MOQ considerations
-
-🚀 ACTION PLAN
-Langkah konkret yang bisa dilakukan MINGGU INI:
-1. [Action 1]
-2. [Action 2]
-3. [Action 3]
-(minimal 5 actions)
-
-⚠️ RED FLAGS (Produk/strategi yang harus dihindari)
-• [Warning 1]
-• [Warning 2]
-• [Warning 3]
-
-Berikan analisis yang:
-- Based on real market conditions
-- Actionable dan praktis
-- Fokus pada profit optimization
-- Up-to-date dengan trend terkini
-
-Jawab dalam bahasa Indonesia:`;
-
-  return await makeClaudeRequest(prompt, 2500);
-};
-
-// ==========================================
-// PRICE OPTIMIZATION
-// ==========================================
-
-/**
- * Optimize product pricing
- */
-export const optimizePrice = async (productName, currentPrice, category, competitorPrices = []) => {
-  const competitorInfo = competitorPrices.length > 0 
-    ? `Harga kompetitor: ${competitorPrices.join(', ')}` 
-    : '';
-
-  const prompt = `Sebagai pricing strategist untuk e-commerce, analisis dan berikan rekomendasi harga optimal untuk:
-
-Produk: ${productName}
 Kategori: ${category}
-Harga saat ini: Rp ${currentPrice.toLocaleString()}
-${competitorInfo}
+${keywords.length > 0 ? `Keywords: ${keywords.join(', ')}` : ''}
+${platform ? `Platform: ${platform}` : ''}
 
-Berikan analisis dalam format:
+Berikan analisis komprehensif:
 
-💰 ANALISIS HARGA SAAT INI
-- Apakah harga sudah optimal?
-- Positioning di market (premium/mid/budget)
-- Competitive advantage/disadvantage
+1. TREND SAAT INI (3-5 poin)
+   - Apa yang sedang hot di kategori ini
+   - Consumer behavior terbaru
+   - Price point yang laku
 
-📊 REKOMENDASI HARGA
-- Harga optimal: Rp [jumlah]
-- Alasan & justifikasi
-- Expected impact on sales
-- Profit margin analysis
+2. PRODUK YANG NAIK DAUN (3-4 produk)
+   - Jenis produk spesifik
+   - Mengapa sedang trending
+   - Estimasi demand
 
-🎯 STRATEGI PRICING
-1. **Base Price Strategy**
-   - Harga dasar yang recommended
-   - Psychological pricing tips
-   
-2. **Discount Strategy**
-   - Kapan sebaiknya diskon
-   - Berapa % diskon yang ideal
-   - Flash sale recommendations
+3. STRATEGI PENJUALAN (5 strategi)
+   - Actionable tips marketing
+   - Content strategy
+   - Pricing strategy
+   - Promotion ideas
 
-3. **Bundle Pricing**
-   - Bundle suggestions
-   - Bundle pricing
-   - Upsell opportunities
+4. PREDIKSI 3 BULAN KE DEPAN
+   - Trend yang akan datang
+   - Opportunity untuk seller
+   - Risiko yang perlu diwaspadai
 
-4. **Competitor Response**
-   - Cara respond terhadap price war
-   - Differentiation strategies
+Format dengan struktur jelas menggunakan heading, bullet points, dan emoji.`;
 
-📈 REVENUE PROJECTION
-- Current scenario vs Recommended scenario
-- Expected conversion rate improvement
-- Estimated revenue increase
+    const response = await fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 2500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-⚠️ RISKS & MITIGATION
-- Potential risks dari price change
-- Mitigation strategies
-- Testing recommendations (A/B testing)
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
 
-Berikan rekomendasi yang:
-- Data-driven
-- Fokus maximize profit (bukan hanya sales volume)
-- Sustainable long-term
-- Praktis untuk diterapkan
+    const data = await response.json();
+    const analysis = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
 
-Jawab dalam bahasa Indonesia:`;
-
-  return await makeClaudeRequest(prompt, 1800);
+    return { data: { analysis }, error: null };
+  } catch (error) {
+    console.error('Analyze Trends Error:', error);
+    
+    return {
+      data: { analysis: getTrendsTemplate(category) },
+      error: null
+    };
+  }
 };
-
-// ==========================================
-// COMPETITOR ANALYSIS
-// ==========================================
 
 /**
- * Analyze competitors
+ * Optimize product title
  */
-export const analyzeCompetitors = async (productName, competitorInfo = '') => {
-  const prompt = `Analisis kompetitor untuk produk "${productName}".
+export const optimizeProductTitle = async (currentTitle, category, keywords = []) => {
+  try {
+    const prompt = `Optimize judul produk untuk e-commerce (maksimal 70 karakter):
 
-${competitorInfo ? `Info kompetitor:\n${competitorInfo}` : 'Berikan analisis umum untuk produk ini.'}
+Judul Saat Ini: ${currentTitle}
+Kategori: ${category}
+${keywords.length > 0 ? `Keywords Target: ${keywords.join(', ')}` : ''}
 
-Berikan analisis mendalam:
+Buat 3 alternatif judul yang:
+1. SEO-friendly dengan keyword penting di awal
+2. Clear dan descriptive
+3. Menarik perhatian buyer
+4. Maksimal 70 karakter
+5. Tidak clickbait
 
-🔍 COMPETITIVE LANDSCAPE
-- Siapa main players
-- Market share estimation
-- Strength & weakness setiap kompetitor
+Format: Numbered list, langsung judul tanpa penjelasan panjang.`;
 
-💡 DIFFERENTIATION OPPORTUNITIES
-- Gap di market yang bisa dimanfaatkan
-- Unique value proposition ideas
-- Positioning recommendations
+    const response = await fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-📊 BENCHMARKING
-- Product quality comparison
-- Price positioning
-- Service level
-- Marketing effectiveness
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
 
-🎯 ACTIONABLE STRATEGIES
-1. Short-term (1-3 bulan):
-   - [Strategy 1]
-   - [Strategy 2]
-   
-2. Long-term (6-12 bulan):
-   - [Strategy 1]
-   - [Strategy 2]
+    const data = await response.json();
+    const suggestions = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
 
-Fokus pada cara MENGALAHKAN kompetitor dengan smart strategies!
-
-Jawab dalam bahasa Indonesia:`;
-
-  return await makeClaudeRequest(prompt, 2000);
+    return { data: { suggestions }, error: null };
+  } catch (error) {
+    console.error('Optimize Title Error:', error);
+    return { data: null, error: error.message };
+  }
 };
-
-// ==========================================
-// TITLE OPTIMIZER
-// ==========================================
 
 /**
- * Optimize product title for SEO
+ * Suggest product pricing
  */
-export const optimizeTitle = async (currentTitle, platform, category = '') => {
-  const prompt = `Optimalkan judul produk untuk marketplace ${platform}.
+export const suggestPricing = async (productInfo, competitorPrices = []) => {
+  try {
+    const prompt = `Analisis dan saran pricing untuk:
 
-Judul saat ini: "${currentTitle}"
-${category ? `Kategori: ${category}` : ''}
+Produk: ${productInfo.name}
+Kategori: ${productInfo.category}
+Modal: Rp ${productInfo.cost?.toLocaleString('id-ID') || '-'}
+Harga Saat Ini: Rp ${productInfo.price?.toLocaleString('id-ID') || '-'}
+${competitorPrices.length > 0 ? `Harga Kompetitor: ${competitorPrices.map(p => `Rp ${p.toLocaleString('id-ID')}`).join(', ')}` : ''}
 
-Berikan 5 alternatif judul yang:
-1. SEO-optimized dengan keyword yang tepat
-2. Eye-catching dan menarik perhatian
-3. Sesuai dengan aturan character limit ${platform}
-4. Mengandung benefit/unique selling point
-5. Menggunakan power words yang efektif
+Berikan:
+1. Rekomendasi harga optimal
+2. Range harga kompetitif
+3. Margin profit yang sehat
+4. Strategi pricing (penetration/premium/competitive)
+5. Tips untuk maximize profit tanpa kehilangan customers
 
-Format:
-1. [Judul 1] - Penjelasan kenapa judul ini bagus
-2. [Judul 2] - ...
-dst
+Format: Structured dengan angka konkret dan reasoning.`;
 
-Plus berikan TIPS UMUM untuk judul yang convert tinggi di ${platform}.
+    const response = await fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-Jawab dalam bahasa Indonesia:`;
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
 
-  return await makeClaudeRequest(prompt, 1200);
+    const data = await response.json();
+    const analysis = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
+
+    return { data: { analysis }, error: null };
+  } catch (error) {
+    console.error('Suggest Pricing Error:', error);
+    return { data: null, error: error.message };
+  }
 };
+
+// ========== FALLBACK TEMPLATES ==========
+
+function getFallbackResponse(message) {
+  const lowerMessage = message.toLowerCase();
+  
+  if (lowerMessage.includes('strategi') || lowerMessage.includes('tips')) {
+    return `💡 Strategi Penjualan Online yang Efektif:
+
+1. **Optimasi Produk**
+   📸 Gunakan foto berkualitas tinggi (min 5 foto berbeda)
+   ✍️ Deskripsi detail & engaging
+   🔍 Keyword SEO untuk searchability
+
+2. **Marketing & Promosi**
+   ⚡ Manfaatkan flash sale & voucher
+   📱 Aktif di social media (IG, TikTok)
+   💌 Email marketing untuk repeat customers
+
+3. **Customer Service Excellence**
+   ⏱️ Respon cepat (<5 menit)
+   🤝 Ramah & solutif
+   ⭐ Follow up setelah pembelian
+
+4. **Analisis & Optimasi**
+   📊 Monitor produk best seller
+   💰 Track competitor pricing
+   💬 Baca & respond customer reviews
+
+Ada aspek spesifik yang ingin Anda dalami?`;
+  }
+  
+  return `👋 Halo! Saya AI Assistant SellerAI Pro siap membantu Anda!
+
+Saya bisa bantu dengan:
+✅ Strategi penjualan & marketing
+✅ Optimasi produk & deskripsi
+✅ Analisis trend pasar
+✅ Tips customer service
+✅ Pricing strategy
+✅ Social media content ideas
+
+Silakan tanyakan apa saja tentang bisnis online shop Anda! 🚀`;
+}
+
+function getDescriptionTemplate(productInfo) {
+  return `✨ ${productInfo.name} - Solusi Terbaik untuk Kebutuhan Anda!
+
+${productInfo.name} hadir dengan kualitas premium yang dirancang khusus untuk memberikan pengalaman terbaik. Produk ini cocok untuk Anda yang menginginkan kombinasi sempurna antara kualitas, fungsionalitas, dan value for money.
+
+🌟 KEUNGGULAN UTAMA:
+• Kualitas material premium yang tahan lama
+• Desain modern dan fungsional
+• Value for money dengan performa maksimal
+• Mudah digunakan untuk semua kalangan
+
+💎 SPESIFIKASI:
+• Kategori: ${productInfo.category || 'Premium Product'}
+• Platform: ${productInfo.platform || 'Multi-platform'}
+• Kualitas: Terjamin Original
+
+💰 HARGA SPESIAL: Rp ${productInfo.price?.toLocaleString('id-ID') || '-'}
+
+📦 READY STOCK & SIAP KIRIM!
+🚚 Pengiriman cepat & aman dengan bubble wrap
+💯 Garansi kepuasan pelanggan
+⭐ Customer service responsif
+
+Jangan lewatkan kesempatan emas ini! Order sekarang juga dan rasakan perbedaannya! 🛒
+
+#${productInfo.name.replace(/\s+/g, '')} #KualitasTerjamin #PromoSpesial`;
+}
+
+function getImageSuggestionsTemplate(category) {
+  return `📸 Saran Foto Produk untuk ${category}:
+
+1. **Hero Shot - Main Product**
+   • Angle: Straight-on dengan slight angle dari atas (eye-level)
+   • Background: Putih bersih atau neutral solid color
+   • Lighting: Soft natural light atau 2-point lighting setup
+   • Komposisi: Produk center frame, rule of thirds
+   • Props: Minimal, fokus pada produk
+
+2. **Detail Shot - Close Up Features**
+   • Zoom ke fitur unik atau quality indicators
+   • Texture, material, branding visible
+   • Background blur untuk emphasis
+   • Macro lens jika ada
+
+3. **Lifestyle Shot - In Context**
+   • Tunjukkan produk being used/worn
+   • Model atau tangan untuk scale
+   • Setting natural sesuai product usage
+   • Storytelling element
+
+4. **Flat Lay - Top Down View**
+   • Susun produk dengan complementary items
+   • Grid atau geometric composition
+   • Color palette harmonis
+   • Props: minimal & relevant
+
+5. **Size Reference - Scale Comparison**
+   • Bandingkan dengan objek familiar
+   • Multiple angle views
+   • Include ruler/measuring tape
+   • Hand/person for scale
+
+💡 Tips: Gunakan tripod untuk consistency, natural lighting optimal jam 9-11 pagi, edit minimal (adjust brightness/contrast), consistent style across all photos!`;
+}
+
+function getTrendsTemplate(category) {
+  return `📊 Analisis Trend ${category}:
+
+📈 TREND SAAT INI:
+• Shift ke produk sustainable & eco-friendly
+• Desain minimalis modern semakin diminati
+• Multi-fungsi dan space-saving jadi prioritas
+• Personalisasi & customization tinggi
+
+🔥 PRODUK YANG NAIK DAUN:
+• Bundle/paket hemat (value proposition)
+• Limited edition items (scarcity effect)
+• Kolaborasi brand lokal (supporting local)
+• Produk dengan story/purpose (emotional connection)
+
+💡 STRATEGI PENJUALAN:
+1. Focus pada USP yang jelas & kuat
+2. Content marketing via TikTok & Instagram Reels
+3. UGC (User Generated Content) & authentic reviews
+4. Flash sale strategis (weekend, end of month, payday)
+5. Loyalty program & repeat customer incentives
+
+🎯 TIPS MARKETING:
+• Video pendek (<60 detik) lebih engaging
+• Before-after demonstration powerful
+• Micro-influencer untuk engagement rate tinggi
+• Storytelling > hard selling
+• Interactive content (polls, quiz, giveaway)
+
+🔮 PREDIKSI 3 BULAN:
+• Demand naik saat seasonal events (Ramadan, Lebaran, etc)
+• Social commerce makin dominan (live selling)
+• AI & automation tools jadi must-have
+• Personalization & customer experience jadi diferensiator
+
+💡 Selalu monitor trend, listen to customer feedback, dan stay agile! 🚀`;
+}
 
 export default {
-  sendChatMessage,
+  chatWithAI,
   generateProductDescription,
   generateImageSuggestions,
   analyzeTrends,
-  optimizePrice,
-  analyzeCompetitors,
-  optimizeTitle
+  optimizeProductTitle,
+  suggestPricing
 };
