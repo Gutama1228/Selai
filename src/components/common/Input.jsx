@@ -1,99 +1,80 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 
 /**
- * Reusable Input Component
- * Supports different types, icons, and validation states
+ * Input Component
+ * Reusable input field with validation and icons
  */
-const Input = forwardRef(({ 
+const Input = ({
   label,
   type = 'text',
   placeholder,
   value,
   onChange,
+  onBlur,
   error,
   helperText,
+  required = false,
+  disabled = false,
   leftIcon,
   rightIcon,
-  disabled = false,
-  required = false,
-  fullWidth = true,
   className = '',
-  ...props 
-}, ref) => {
-  
-  const inputClasses = `
-    w-full px-4 py-3 
-    border rounded-lg 
-    text-gray-900 
-    placeholder-gray-400
-    transition-all duration-200
-    focus:outline-none focus:ring-2
-    disabled:bg-gray-100 disabled:cursor-not-allowed
-    ${error 
-      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-      : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
-    }
-    ${leftIcon ? 'pl-11' : ''}
-    ${rightIcon ? 'pr-11' : ''}
-    ${className}
-  `.trim().replace(/\s+/g, ' ');
-
-  const containerClasses = fullWidth ? 'w-full' : '';
-
+  ...props
+}) => {
   return (
-    <div className={containerClasses}>
+    <div className={`w-full ${className}`}>
       {label && (
         <label className="block text-sm font-semibold text-gray-700 mb-2">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      
+
       <div className="relative">
         {leftIcon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-400">
-              {leftIcon}
-            </span>
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            {leftIcon}
           </div>
         )}
-        
+
         <input
-          ref={ref}
           type={type}
+          placeholder={placeholder}
           value={value}
           onChange={onChange}
-          placeholder={placeholder}
+          onBlur={onBlur}
           disabled={disabled}
-          required={required}
-          className={inputClasses}
+          className={`
+            w-full px-4 py-2.5 
+            ${leftIcon ? 'pl-10' : ''} 
+            ${rightIcon ? 'pr-10' : ''}
+            border rounded-lg
+            transition-all duration-200
+            focus:outline-none focus:ring-2
+            disabled:bg-gray-100 disabled:cursor-not-allowed
+            ${error 
+              ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+              : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
+            }
+          `}
           {...props}
         />
-        
+
         {rightIcon && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <span className="text-gray-400">
-              {rightIcon}
-            </span>
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            {rightIcon}
           </div>
         )}
       </div>
-      
+
       {error && (
-        <p className="mt-1 text-sm text-red-600">
-          {error}
-        </p>
+        <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
-      
+
       {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">
-          {helperText}
-        </p>
+        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
       )}
     </div>
   );
-});
-
-Input.displayName = 'Input';
+};
 
 export default Input;
