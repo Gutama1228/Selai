@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart3, MessageSquare, ShoppingBag, Package, Edit, Image, TrendingUp, Settings } from 'lucide-react';
+import { useOrders } from '../../context/OrderContext';
 import Header from './Header';
 import Sidebar from '../common/Sidebar';
 import Footer from './Footer';
@@ -10,6 +11,12 @@ import Footer from './Footer';
  */
 const SellerLayout = ({ children, currentPage, onNavigate }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { orders } = useOrders();
+
+  // Calculate real pending orders count
+  const pendingOrdersCount = orders.filter(
+    order => order.status === 'pending' || order.status === 'processing'
+  ).length;
 
   // Menu items for seller
   const menuItems = [
@@ -33,7 +40,7 @@ const SellerLayout = ({ children, currentPage, onNavigate }) => {
       id: 'orders',
       label: 'Pesanan',
       icon: Package,
-      count: 5 // Example pending orders count
+      count: pendingOrdersCount > 0 ? pendingOrdersCount : undefined // Only show if there are pending orders
     },
     {
       id: 'description-generator',
