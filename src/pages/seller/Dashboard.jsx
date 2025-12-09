@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ShoppingBag, DollarSign, Package, TrendingUp, Sparkles, AlertCircle } from 'lucide-react';
+import { ShoppingBag, DollarSign, Package, TrendingUp, AlertCircle } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import { formatCurrency } from '../../utils/helpers';
@@ -19,6 +19,16 @@ const Dashboard = ({ onNavigate }) => {
 
   const productStats = getProductStats();
   const orderStats = getOrderStats();
+
+  // Calculate actual rating from orders/reviews (if available)
+  const calculateRating = () => {
+    if (!orders || orders.length === 0) return null;
+    // TODO: Calculate from actual review data when implemented
+    // For now, return null for new users
+    return null;
+  };
+
+  const storeRating = calculateRating();
 
   // Top selling products (limit 4)
   const topProducts = [...products]
@@ -41,10 +51,6 @@ const Dashboard = ({ onNavigate }) => {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">Selamat datang kembali! 👋</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-lg">
-          <Sparkles className="w-5 h-5" />
-          <span className="font-semibold">AI Powered</span>
-        </div>
       </div>
 
       {/* Stats Cards */}
@@ -55,8 +61,8 @@ const Dashboard = ({ onNavigate }) => {
           subtitle="Total"
           icon={ShoppingBag}
           color="blue"
-          trend="up"
-          trendValue="+12% dari bulan lalu"
+          trend={orderStats.total > 0 ? "up" : undefined}
+          trendValue={orderStats.total > 0 ? "+12% dari bulan lalu" : undefined}
         />
         <StatsCard
           title="Total Revenue"
@@ -64,8 +70,8 @@ const Dashboard = ({ onNavigate }) => {
           subtitle="Total"
           icon={DollarSign}
           color="green"
-          trend="up"
-          trendValue="+25% dari bulan lalu"
+          trend={orderStats.totalRevenue > 0 ? "up" : undefined}
+          trendValue={orderStats.totalRevenue > 0 ? "+25% dari bulan lalu" : undefined}
         />
         <StatsCard
           title="Pesanan Pending"
@@ -77,8 +83,8 @@ const Dashboard = ({ onNavigate }) => {
         />
         <StatsCard
           title="Rating Toko"
-          value="4.8/5"
-          subtitle="986 ulasan"
+          value={storeRating ? `${storeRating}/5` : "Belum ada"}
+          subtitle={storeRating ? `${orders.length} ulasan` : "Mulai jualan"}
           icon={TrendingUp}
           color="purple"
         />
