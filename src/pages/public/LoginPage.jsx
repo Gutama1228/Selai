@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { isValidEmail } from '../../utils/validation'; // FIXED: Import dari validation.js
+import { isValidEmail } from '../../utils/validation';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 
@@ -51,7 +51,7 @@ const LoginPage = ({ onNavigateToRegister, onNavigateToHome, onNavigateToForgotP
         {/* Back Button */}
         <button
           onClick={onNavigateToHome}
-          className="flex items-center gap-2 text-white mb-6 hover:underline"
+          className="flex items-center gap-2 text-white mb-6 hover:underline transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
           Kembali ke Home
@@ -115,7 +115,7 @@ const LoginPage = ({ onNavigateToRegister, onNavigateToHome, onNavigateToForgotP
                 <button
                   type="button"
                   onClick={onNavigateToForgotPassword}
-                  className="text-sm text-purple-600 hover:underline"
+                  className="text-sm text-purple-600 hover:underline transition-all"
                 >
                   Lupa password?
                 </button>
@@ -148,21 +148,11 @@ const LoginPage = ({ onNavigateToRegister, onNavigateToHome, onNavigateToForgotP
               Belum punya akun?{' '}
               <button
                 onClick={onNavigateToRegister}
-                className="text-purple-600 font-semibold hover:underline"
+                className="text-purple-600 font-semibold hover:underline transition-all"
               >
                 Daftar gratis
               </button>
             </p>
-          </div>
-
-          {/* Demo Accounts Info */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-900 font-semibold mb-2">Demo Accounts:</p>
-            <div className="space-y-1 text-xs text-blue-800">
-              <p>👑 Admin: admin@sellerai.com</p>
-              <p>🛍️ Seller: seller@test.com</p>
-              <p className="text-blue-600 mt-2">Password: bebas (demo mode)</p>
-            </div>
           </div>
         </div>
       </div>
