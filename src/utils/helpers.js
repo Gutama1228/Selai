@@ -2,6 +2,109 @@
 // General helper functions
 
 /**
+ * Format number to currency (IDR)
+ */
+export const formatCurrency = (amount) => {
+  if (amount === null || amount === undefined) return 'Rp 0';
+  
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+/**
+ * Format number with separators
+ */
+export const formatNumber = (number) => {
+  if (number === null || number === undefined) return '0';
+  return new Intl.NumberFormat('id-ID').format(number);
+};
+
+/**
+ * Format date to readable string
+ */
+export const formatDate = (date) => {
+  if (!date) return '';
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(date));
+};
+
+/**
+ * Format date with time
+ */
+export const formatDateTime = (date) => {
+  if (!date) return '';
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date));
+};
+
+/**
+ * Format relative time (e.g., "2 hours ago")
+ */
+export const formatRelativeTime = (date) => {
+  if (!date) return '';
+  
+  const now = new Date();
+  const past = new Date(date);
+  const diffInSeconds = Math.floor((now - past) / 1000);
+  
+  if (diffInSeconds < 60) return 'Baru saja';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} menit lalu`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam lalu`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} hari lalu`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)} minggu lalu`;
+  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} bulan lalu`;
+  return `${Math.floor(diffInSeconds / 31536000)} tahun lalu`;
+};
+
+/**
+ * Truncate text to specified length
+ */
+export const truncateText = (text, maxLength = 100) => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
+/**
+ * Format file size
+ */
+export const formatFileSize = (bytes) => {
+  if (bytes === 0 || !bytes) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+};
+
+/**
+ * Validate email format
+ */
+export const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+/**
+ * Validate phone number (Indonesian format)
+ */
+export const isValidPhone = (phone) => {
+  const phoneRegex = /^(\+62|62|0)[0-9]{9,12}$/;
+  return phoneRegex.test(phone.replace(/[\s-]/g, ''));
+};
+
+/**
  * Generate unique ID
  */
 export const generateId = (prefix = '') => {
@@ -260,7 +363,63 @@ export const throttle = (func, limit) => {
   };
 };
 
+/**
+ * Capitalize first letter
+ */
+export const capitalize = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+/**
+ * Convert to slug
+ */
+export const toSlug = (str) => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
+/**
+ * Get file extension
+ */
+export const getFileExtension = (filename) => {
+  if (!filename) return '';
+  return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
+};
+
+/**
+ * Generate color from string (for avatars)
+ */
+export const stringToColor = (str) => {
+  if (!str) return '#6366f1';
+  
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const colors = [
+    '#ef4444', '#f59e0b', '#10b981', '#3b82f6', 
+    '#6366f1', '#8b5cf6', '#ec4899', '#14b8a6'
+  ];
+  
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export default {
+  formatCurrency,
+  formatNumber,
+  formatDate,
+  formatDateTime,
+  formatRelativeTime,
+  truncateText,
+  formatFileSize,
+  isValidEmail,
+  isValidPhone,
   generateId,
   sleep,
   deepClone,
@@ -281,5 +440,9 @@ export default {
   downloadFile,
   isMobile,
   debounce,
-  throttle
+  throttle,
+  capitalize,
+  toSlug,
+  getFileExtension,
+  stringToColor
 };
