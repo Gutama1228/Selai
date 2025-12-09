@@ -6,25 +6,23 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    open: true,
     host: true
   },
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'terser',
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'icons': ['lucide-react']
+          vendor: ['react', 'react-dom'],
+          charts: ['recharts']
         }
       }
-    },
-    chunkSizeWarningLimit: 1000
+    }
   },
-  preview: {
-    port: 4173,
-    open: true
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
   }
 })
