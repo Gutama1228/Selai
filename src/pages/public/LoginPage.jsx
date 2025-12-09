@@ -1,207 +1,169 @@
 import React, { useState } from 'react';
-import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { isValidEmail } from '../../utils/validation'; // FIXED: Import dari validation.js
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import Alert from '../../components/common/Alert';
 
-/**
- * Login Page Component
- * User authentication page
- */
 const LoginPage = ({ onNavigateToRegister, onNavigateToHome, onNavigateToForgotPassword }) => {
-  const { login } = useAuth();
-  
+  const { login, loading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setError(''); // Clear error when user types
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email wajib diisi';
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = 'Format email tidak valid';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password wajib diisi';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    
-    // Validation
-    if (!formData.email || !formData.password) {
-      setError('Email dan password harus diisi');
+
+    if (!validateForm()) {
       return;
     }
 
-    setLoading(true);
+    const result = await login(formData.email, formData.password);
 
-    try {
-      const result = await login(formData.email, formData.password);
-      
-      if (result.success) {
-        // Login successful, redirect handled by AuthContext
-        // Redirect will be handled in main App component
-      } else {
-        setError(result.error || 'Login gagal. Silakan coba lagi.');
-      }
-    } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.');
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      // Navigation will be handled by App.jsx based on auth state
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center p-6">
-      {/* Background Decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-white/5 rounded-full blur-3xl"></div>
-      </div>
-
-      {/* Login Card */}
-      <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
         {/* Back Button */}
         <button
           onClick={onNavigateToHome}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition"
+          className="flex items-center gap-2 text-white mb-6 hover:underline"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Kembali ke Home</span>
+          <ArrowLeft className="w-5 h-5" />
+          Kembali ke Home
         </button>
 
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Sparkles className="w-8 h-8 text-white" />
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogIn className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Selamat Datang Kembali
+            </h1>
+            <p className="text-gray-600">
+              Login untuk melanjutkan ke dashboard Anda
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Selamat Datang!</h2>
-          <p className="text-gray-600 mt-2">Masuk ke akun SellerAI Pro Anda</p>
-        </div>
 
-        {/* Error Alert */}
-        {error && (
-          <Alert variant="error" className="mb-6">
-            {error}
-          </Alert>
-        )}
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Email"
-            type="email"
-            name="email"
-            placeholder="nama@email.com"
-            value={formData.email}
-            onChange={handleChange}
-            leftIcon={<Mail className="w-5 h-5" />}
-            required
-            disabled={loading}
-          />
-
-          <div className="relative">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              leftIcon={<Lock className="w-5 h-5" />}
+              label="Email"
+              type="email"
+              placeholder="nama@email.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              error={errors.email}
+              leftIcon={<Mail className="w-5 h-5" />}
               required
-              disabled={loading}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[38px] text-gray-400 hover:text-gray-600"
+
+            <div>
+              <Input
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Masukkan password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                error={errors.password}
+                leftIcon={<Lock className="w-5 h-5" />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="focus:outline-none"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                }
+                required
+              />
+
+              {/* Forgot Password Link */}
+              <div className="text-right mt-2">
+                <button
+                  type="button"
+                  onClick={onNavigateToForgotPassword}
+                  className="text-sm text-purple-600 hover:underline"
+                >
+                  Lupa password?
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              loading={loading}
             >
-              {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
-                <Eye className="w-5 h-5" />
-              )}
-            </button>
+              Login
+            </Button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-600">atau</span>
+            </div>
           </div>
 
-          {/* Forgot Password */}
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={onNavigateToForgotPassword}
-              className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-            >
-              Lupa password?
-            </button>
+          {/* Register Link */}
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Belum punya akun?{' '}
+              <button
+                onClick={onNavigateToRegister}
+                className="text-purple-600 font-semibold hover:underline"
+              >
+                Daftar gratis
+              </button>
+            </p>
           </div>
 
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            disabled={loading}
-          >
-            {loading ? 'Memproses...' : 'Masuk'}
-          </Button>
-        </form>
-
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+          {/* Demo Accounts Info */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p className="text-xs text-blue-900 font-semibold mb-2">Demo Accounts:</p>
+            <div className="space-y-1 text-xs text-blue-800">
+              <p>👑 Admin: admin@sellerai.com</p>
+              <p>🛍️ Seller: seller@test.com</p>
+              <p className="text-blue-600 mt-2">Password: bebas (demo mode)</p>
+            </div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Atau masuk dengan</span>
-          </div>
-        </div>
-
-        {/* Social Login Buttons */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <button
-            type="button"
-            className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-          >
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-            <span className="text-sm font-medium">Google</span>
-          </button>
-          <button
-            type="button"
-            className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-          >
-            <img src="https://www.facebook.com/favicon.ico" alt="Facebook" className="w-5 h-5" />
-            <span className="text-sm font-medium">Facebook</span>
-          </button>
-        </div>
-
-        {/* Register Link */}
-        <div className="text-center">
-          <p className="text-gray-600 text-sm">
-            Belum punya akun?{' '}
-            <button
-              onClick={onNavigateToRegister}
-              className="text-purple-600 font-semibold hover:text-purple-700"
-            >
-              Daftar sekarang
-            </button>
-          </p>
-        </div>
-
-        {/* Demo Info */}
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-xs text-yellow-800">
-            <strong>Demo Mode:</strong><br />
-            • Email apapun = Login sebagai Seller<br />
-            • Email "admin@sellerai.com" = Login sebagai Admin
-          </p>
         </div>
       </div>
     </div>
