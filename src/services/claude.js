@@ -5,6 +5,14 @@ const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 /**
+ * Send chat message to Claude AI (alias for chatWithAI)
+ * This function is used by AIChat.jsx
+ */
+export const sendChatMessage = async (message, conversationHistory = []) => {
+  return await chatWithAI(message, conversationHistory);
+};
+
+/**
  * Chat with AI Assistant
  */
 export const chatWithAI = async (message, conversationHistory = []) => {
@@ -510,6 +518,7 @@ function getTrendsTemplate(category) {
 }
 
 export default {
+  sendChatMessage,
   chatWithAI,
   generateProductDescription,
   generateImageSuggestions,
