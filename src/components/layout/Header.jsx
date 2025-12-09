@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X, Bell, User, LogOut, Settings, ChevronDown, Sparkles } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useOrders } from '../../context/OrderContext';
 import Button from '../common/Button';
 
 /**
@@ -9,6 +10,7 @@ import Button from '../common/Button';
  */
 const Header = ({ onToggleSidebar, sidebarOpen = true }) => {
   const { user, isAdmin, logout } = useAuth();
+  const { orders } = useOrders();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -17,13 +19,30 @@ const Header = ({ onToggleSidebar, sidebarOpen = true }) => {
     window.location.href = '/';
   };
 
-  // Mock notifications
-  const notifications = [
-    { id: 1, title: 'Pesanan Baru', message: 'Ada pesanan baru dari Ahmad', time: '5 menit lalu', unread: true },
-    { id: 2, title: 'Stok Rendah', message: 'Headphone Wireless stok tinggal 5', time: '1 jam lalu', unread: true },
-    { id: 3, title: 'Pembayaran Berhasil', message: 'Pembayaran Rp 299.000 diterima', time: '2 jam lalu', unread: false },
-  ];
+  // Generate real notifications from orders (only new/pending orders)
+  const generateNotifications = () => {
+    if (!orders || orders.length === 0) return [];
 
+    const notifications = [];
+
+    // Get pending orders
+    const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing');
+    
+    pendingOrders.slice(0, 5).forEach(order => {
+      notifications.push({
+        id: order.id,
+        title: 'Pesanan Baru',
+        message: `Pesanan ${order.orderNo} dari ${order.customer}`,
+        time: order.createdAt || order.date,
+        unread: true,
+        type: 'order'
+      });
+    });
+
+    return notifications;
+  };
+
+  const notifications = generateNotifications();
   const unreadCount = notifications.filter(n => n.unread).length;
 
   return (
@@ -35,11 +54,12 @@ const Header = ({ onToggleSidebar, sidebarOpen = true }) => {
           <button
             onClick={onToggleSidebar}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
+            aria-label="Toggle sidebar"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
-          {/* Logo / App Name */}
+          {/* Logo / App Name - Only show once */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
               <Sparkles className="w-6 h-6 text-white" />
@@ -62,10 +82,13 @@ const Header = ({ onToggleSidebar, sidebarOpen = true }) => {
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Notifications"
             >
               <Bell className="w-5 h-5 text-gray-600" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold">
+                  {unreadCount}
+                </span>
               )}
             </button>
 
@@ -88,31 +111,45 @@ const Header = ({ onToggleSidebar, sidebarOpen = true }) => {
                     </div>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
-                    {notifications.map(notif => (
-                      <div
-                        key={notif.id}
-                        className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer ${
-                          notif.unread ? 'bg-blue-50' : ''
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {notif.unread && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                          )}
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm text-gray-900">{notif.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
-                            <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500">
+                        <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                        <p className="text-sm">Belum ada notifikasi</p>
+                      </div>
+                    ) : (
+                      notifications.map(notif => (
+                        <div
+                          key={notif.id}
+                          className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer ${
+                            notif.unread ? 'bg-blue-50' : ''
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {notif.unread && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-sm text-gray-900">{notif.title}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(notif.time).toLocaleString('id-ID')}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
-                  <div className="p-3 border-t border-gray-200 text-center">
-                    <button className="text-sm text-purple-600 font-semibold hover:text-purple-700">
-                      Lihat Semua Notifikasi
-                    </button>
-                  </div>
+                  {notifications.length > 0 && (
+                    <div className="p-3 border-t border-gray-200 text-center">
+                      <button 
+                        onClick={() => setShowNotifications(false)}
+                        className="text-sm text-purple-600 font-semibold hover:text-purple-700"
+                      >
+                        Tutup
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -123,6 +160,7 @@ const Header = ({ onToggleSidebar, sidebarOpen = true }) => {
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-2 sm:gap-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="User menu"
             >
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
