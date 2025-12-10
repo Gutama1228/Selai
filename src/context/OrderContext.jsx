@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { 
   getUserOrders, 
   getOrder, 
@@ -16,6 +16,7 @@ export const OrderProvider = ({ children }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const hasShownError = useRef(false); // Prevent spam toast
 
   // Load orders when user is authenticated
   useEffect(() => {
@@ -23,8 +24,9 @@ export const OrderProvider = ({ children }) => {
       loadOrders();
     } else {
       setOrders([]);
+      hasShownError.current = false; // Reset error flag
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user?.id]); // Only re-run if user.id changes
 
   /**
    * Load all orders for current user
@@ -40,15 +42,33 @@ export const OrderProvider = ({ children }) => {
       
       if (fetchError) {
         setError(fetchError);
-        toast.error('Gagal memuat pesanan');
+        // Only show toast once per session
+        if (!hasShownError.current) {
+          console.error('Failed to load orders:', fetchError);
+          // Don't show toast for empty data - it's normal for new users
+          if (fetchError !== 'No orders found') {
+            toast.error('Gagal memuat pesanan');
+          }
+          hasShownError.current = true;
+        }
+        setOrders([]); // Set empty array instead of keeping old data
         return;
       }
       
       setOrders(data || []);
+      hasShownError.current = false; // Reset on success
     } catch (err) {
       console.error('Load orders error:', err);
       setError(err.message);
-      toast.error('Terjadi kesalahan saat memuat pesanan');
+      
+      // Only show toast once
+      if (!hasShownError.current) {
+        // Don't spam toast - silent fail for network errors
+        console.error('Error loading orders:', err);
+        hasShownError.current = true;
+      }
+      
+      setOrders([]); // Set empty array for safety
     } finally {
       setLoading(false);
     }
