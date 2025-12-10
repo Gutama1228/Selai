@@ -59,7 +59,20 @@ const Header = ({ onToggleSidebar, sidebarOpen = true }) => {
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
-          {/* Removed duplicate logo - already in sidebar */}
+          {/* Logo / App Name */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                SellerAI Pro
+              </h1>
+              <p className="text-xs text-gray-500">
+                {isAdmin ? 'Admin Panel' : 'Seller Dashboard'}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Right Section */}
