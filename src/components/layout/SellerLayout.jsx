@@ -66,17 +66,8 @@ const SellerLayout = ({ children, currentPage, onNavigate }) => {
     }
   ];
 
-  const logo = (
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
-        <span className="text-white text-xl">✨</span>
-      </div>
-      <div>
-        <h1 className="text-lg font-bold text-gray-900">SellerAI Pro</h1>
-        <p className="text-xs text-gray-500">Seller Dashboard</p>
-      </div>
-    </div>
-  );
+  // No logo for sidebar - logo is in Header
+  const logo = null;
 
   const sidebarFooter = (
     <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg">
