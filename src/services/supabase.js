@@ -159,7 +159,7 @@ export const isAdmin = (user) => {
 };
 
 /**
- * Reset password
+ * Reset password - Send reset email
  */
 export const resetPassword = async (email) => {
   try {
@@ -175,6 +175,9 @@ export const resetPassword = async (email) => {
     return { data: null, error: error.message };
   }
 };
+
+// Alias for compatibility with ForgotPassword.jsx and other components
+export const resetPasswordForEmail = resetPassword;
 
 /**
  * Update password
@@ -208,6 +211,131 @@ export const updateUserMetadata = async (metadata) => {
     return { data, error: null };
   } catch (error) {
     console.error('Update user metadata error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Verify OTP for email confirmation or password reset
+ */
+export const verifyOTP = async (email, token, type = 'email') => {
+  try {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type // 'email' | 'sms' | 'signup' | 'recovery'
+    });
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Resend verification email
+ */
+export const resendVerificationEmail = async (email) => {
+  try {
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email
+    });
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Sign in with OAuth provider (Google, GitHub, etc)
+ */
+export const signInWithProvider = async (provider) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Sign in with provider error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+// ================================
+// DATABASE HELPER FUNCTIONS
+// ================================
+
+/**
+ * Get user profile from database
+ */
+export const getUserProfile = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Get user profile error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Update user profile in database
+ */
+export const updateUserProfile = async (userId, profileData) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update(profileData)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Update user profile error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Create user profile in database
+ */
+export const createUserProfile = async (userId, profileData) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .insert([{ id: userId, ...profileData }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Create user profile error:', error);
     return { data: null, error: error.message };
   }
 };
