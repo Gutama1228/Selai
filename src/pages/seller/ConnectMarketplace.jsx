@@ -68,7 +68,6 @@ const MarketplaceConnection = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Call API to save credentials
     console.log('Connecting to', selectedPlatform.name, formData);
     setConnectedPlatforms([...connectedPlatforms, selectedPlatform.id]);
     setShowModal(false);
@@ -79,7 +78,6 @@ const MarketplaceConnection = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Hubungkan Toko Online Anda
@@ -89,7 +87,6 @@ const MarketplaceConnection = () => {
           </p>
         </div>
 
-        {/* Info Banner */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 flex items-start gap-4">
           <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
           <div>
@@ -107,7 +104,6 @@ const MarketplaceConnection = () => {
           </div>
         </div>
 
-        {/* Platform Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {platforms.map((platform) => {
             const connected = isConnected(platform.id);
@@ -117,7 +113,6 @@ const MarketplaceConnection = () => {
                 key={platform.id}
                 className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
               >
-                {/* Card Header */}
                 <div className={`bg-gradient-to-r ${platform.color} p-6 text-white`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -136,7 +131,6 @@ const MarketplaceConnection = () => {
                   </div>
                 </div>
 
-                {/* Card Body */}
                 <div className="p-6">
                   {connected ? (
                     <div className="space-y-4">
@@ -200,7 +194,6 @@ const MarketplaceConnection = () => {
           })}
         </div>
 
-        {/* Modal */}
         {showModal && selectedPlatform && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
@@ -216,7 +209,7 @@ const MarketplaceConnection = () => {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4">
                 {selectedPlatform.fields.map((field) => (
                   <div key={field.name}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -224,7 +217,6 @@ const MarketplaceConnection = () => {
                     </label>
                     <input
                       type={field.type}
-                      required
                       value={formData[field.name] || ''}
                       onChange={(e) =>
                         setFormData({ ...formData, [field.name]: e.target.value })
@@ -244,20 +236,19 @@ const MarketplaceConnection = () => {
 
                 <div className="flex gap-3 pt-4">
                   <button
-                    type="button"
                     onClick={() => setShowModal(false)}
                     className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   >
                     Batal
                   </button>
                   <button
-                    type="submit"
+                    onClick={handleSubmit}
                     className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium"
                   >
                     Hubungkan
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}
