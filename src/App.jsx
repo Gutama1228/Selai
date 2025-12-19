@@ -1,5 +1,5 @@
 // src/App.jsx
-// Main App component with routing
+// Minimal version - only using existing files
 
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -8,37 +8,8 @@ import { OrderProvider } from './context/OrderContext';
 import { ProductProvider } from './context/ProductContext';
 import { Toaster } from 'react-hot-toast';
 
-// Public pages
-import LandingPage from './pages/public/LandingPage';
-import LoginPage from './pages/public/LoginPage';
-import RegisterPage from './pages/public/RegisterPage';
-import ForgotPassword from './pages/public/ForgotPassword';
-import PricingPage from './pages/public/PricingPage';
-
-// Seller pages
-import Dashboard from './pages/seller/Dashboard';
-import Products from './pages/seller/Products';
-import Orders from './pages/seller/Orders';
-import AIChat from './pages/seller/AIChat';
-import Analytics from './pages/seller/Analytics';
-import Settings from './pages/seller/Settings';
-import DescriptionGenerator from './pages/seller/DescriptionGenerator';
-import ImageGenerator from './pages/seller/ImageGenerator';
-
-// Admin pages (if any)
-import AdminDashboard from './pages/admin/AdminDashboard';
-
-// Auth callback pages
-import TikTokCallback from './pages/auth/TikTokCallback';
-import ShopeeCallback from './pages/auth/ShopeeCallback';
-import LazadaCallback from './pages/auth/LazadaCallback';
-
-// Layout components
-import SellerLayout from './components/layout/SellerLayout';
-import AdminLayout from './components/layout/AdminLayout';
-
-// Protected Route wrapper
-import { ProtectedRoute } from './components/common/ProtectedRoute';
+// Import only existing pages
+// You'll need to create other pages later
 
 function App() {
   return (
@@ -73,158 +44,50 @@ function App() {
             />
 
             <Routes>
-              {/* =================== PUBLIC ROUTES =================== */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/pricing" element={<PricingPage />} />
+              {/* Temporary landing page */}
+              <Route 
+                path="/" 
+                element={
+                  <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+                    <div className="text-center">
+                      <h1 className="text-6xl font-bold text-gray-800 mb-4">
+                        Selai 🍓
+                      </h1>
+                      <p className="text-2xl text-gray-600 mb-8">
+                        Platform AI untuk Seller Online Shop
+                      </p>
+                      <p className="text-gray-500">
+                        Website sedang dalam pengembangan...
+                      </p>
+                    </div>
+                  </div>
+                } 
+              />
 
-              {/* =================== AUTH CALLBACK ROUTES =================== */}
-              {/* TikTok Shop OAuth callback */}
+              {/* TikTok OAuth callback route */}
               <Route 
                 path="/auth/tiktok/callback" 
                 element={
-                  <ProtectedRoute>
-                    <TikTokCallback />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Shopee OAuth callback */}
-              <Route 
-                path="/auth/shopee/callback" 
-                element={
-                  <ProtectedRoute>
-                    <ShopeeCallback />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Lazada OAuth callback */}
-              <Route 
-                path="/auth/lazada/callback" 
-                element={
-                  <ProtectedRoute>
-                    <LazadaCallback />
-                  </ProtectedRoute>
+                  <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full mx-auto mb-4 animate-spin flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white rounded-full"></div>
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                        TikTok Shop Callback
+                      </h2>
+                      <p className="text-gray-600">
+                        Processing OAuth callback...
+                      </p>
+                      <p className="text-sm text-gray-500 mt-4">
+                        This feature will be implemented soon
+                      </p>
+                    </div>
+                  </div>
                 } 
               />
 
-              {/* =================== SELLER ROUTES =================== */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <Dashboard />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/products"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <Products />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/orders"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <Orders />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/ai-chat"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <AIChat />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/analytics"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <Analytics />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/description-generator"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <DescriptionGenerator />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/image-generator"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <ImageGenerator />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <Settings />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Settings sub-routes */}
-              <Route
-                path="/settings/marketplace"
-                element={
-                  <ProtectedRoute>
-                    <SellerLayout>
-                      <Settings activeTab="marketplace" />
-                    </SellerLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* =================== ADMIN ROUTES =================== */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <AdminDashboard />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* =================== 404 NOT FOUND =================== */}
+              {/* Catch all - redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </ProductProvider>
