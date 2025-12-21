@@ -9,7 +9,8 @@ import { ProductProvider } from './context/ProductContext';
 import { Toaster } from 'react-hot-toast';
 
 // Import only existing pages
-// You'll need to create other pages later
+// TikTok callback will be created
+import TikTokCallback from './pages/auth/TikTokCallback';
 
 function App() {
   return (
@@ -67,24 +68,7 @@ function App() {
               {/* TikTok OAuth callback route */}
               <Route 
                 path="/auth/tiktok/callback" 
-                element={
-                  <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full mx-auto mb-4 animate-spin flex items-center justify-center">
-                        <div className="w-12 h-12 bg-white rounded-full"></div>
-                      </div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                        TikTok Shop Callback
-                      </h2>
-                      <p className="text-gray-600">
-                        Processing OAuth callback...
-                      </p>
-                      <p className="text-sm text-gray-500 mt-4">
-                        This feature will be implemented soon
-                      </p>
-                    </div>
-                  </div>
-                } 
+                element={<TikTokCallback />} 
               />
 
               {/* Catch all - redirect to home */}
