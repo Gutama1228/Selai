@@ -9,8 +9,8 @@ import { ProductProvider } from './context/ProductContext';
 import { Toaster } from 'react-hot-toast';
 
 // Import only existing pages
-// TikTok callback will be created
 import TikTokCallback from './pages/auth/TikTokCallback';
+import ConnectMarketplace from './pages/seller/ConnectMarketplace';
 
 function App() {
   return (
@@ -57,9 +57,15 @@ function App() {
                       <p className="text-2xl text-gray-600 mb-8">
                         Platform AI untuk Seller Online Shop
                       </p>
-                      <p className="text-gray-500">
-                        Website sedang dalam pengembangan...
+                      <p className="text-gray-500 mb-8">
+                        Kelola semua marketplace dalam satu dashboard
                       </p>
+                      <a
+                        href="/connect"
+                        className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium text-lg"
+                      >
+                        Hubungkan Marketplace
+                      </a>
                     </div>
                   </div>
                 } 
@@ -69,6 +75,12 @@ function App() {
               <Route 
                 path="/auth/tiktok/callback" 
                 element={<TikTokCallback />} 
+              />
+
+              {/* Connect Marketplace page */}
+              <Route 
+                path="/connect" 
+                element={<ConnectMarketplace />} 
               />
 
               {/* Catch all - redirect to home */}
