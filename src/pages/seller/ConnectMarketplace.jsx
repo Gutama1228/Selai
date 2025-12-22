@@ -1,36 +1,32 @@
-import React, { useState } from 'react';
-import { ShoppingBag, Plus, Check, AlertCircle, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingBag, Check, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 
-const MarketplaceConnection = () => {
-  const [connectedPlatforms, setConnectedPlatforms] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState(null);
+const ConnectMarketplace = () => {
+  const [connections, setConnections] = useState({
+    tiktok: false,
+    shopee: false,
+    lazada: false
+  });
+  const [loading, setLoading] = useState({});
 
   const platforms = [
     {
-      id: 'shopee',
-      name: 'Shopee',
-      icon: '🛍️',
-      color: 'from-orange-500 to-orange-600',
-      description: 'Marketplace terbesar di Indonesia',
-      tutorial: 'https://open.shopee.com/',
-      fields: [
-        { name: 'partnerId', label: 'Partner ID', type: 'text' },
-        { name: 'partnerKey', label: 'Partner Key', type: 'password' },
-        { name: 'shopId', label: 'Shop ID', type: 'text' }
-      ]
+      id: 'tiktok',
+      name: 'TikTok Shop',
+      icon: '⚫',
+      color: 'from-gray-800 to-gray-900',
+      description: 'Integrasi dengan TikTok Shop & Tokopedia',
+      available: true,
+      features: ['Sinkronisasi produk', 'Kelola pesanan', 'Update stok otomatis']
     },
     {
-      id: 'tokopedia',
-      name: 'Tokopedia',
-      icon: '🟢',
-      color: 'from-green-500 to-green-600',
-      description: 'Platform e-commerce lokal terpercaya',
-      tutorial: 'https://partner.tiktokshop.com/',
-      fields: [
-        { name: 'appKey', label: 'App Key', type: 'text' },
-        { name: 'appSecret', label: 'App Secret', type: 'password' }
-      ]
+      id: 'shopee',
+      name: 'Shopee',
+      icon: '🟠',
+      color: 'from-orange-500 to-orange-600',
+      description: 'Marketplace terbesar di Indonesia',
+      available: false,
+      features: ['Coming soon...']
     },
     {
       id: 'lazada',
@@ -38,81 +34,99 @@ const MarketplaceConnection = () => {
       icon: '🔵',
       color: 'from-blue-500 to-blue-600',
       description: 'Regional marketplace terkemuka',
-      tutorial: 'https://open.lazada.com/',
-      fields: [
-        { name: 'appKey', label: 'App Key', type: 'text' },
-        { name: 'appSecret', label: 'App Secret', type: 'password' }
-      ]
-    },
-    {
-      id: 'tiktok',
-      name: 'TikTok Shop',
-      icon: '⚫',
-      color: 'from-gray-800 to-gray-900',
-      description: 'Social commerce terpopuler',
-      tutorial: 'https://partner.tiktokshop.com/',
-      fields: [
-        { name: 'appKey', label: 'App Key', type: 'text' },
-        { name: 'appSecret', label: 'App Secret', type: 'password' }
-      ]
+      available: false,
+      features: ['Coming soon...']
     }
   ];
 
-  const [formData, setFormData] = useState({});
-
-  const handleConnect = (platform) => {
-    setSelectedPlatform(platform);
-    setShowModal(true);
-    setFormData({});
+  const handleConnect = (platformId) => {
+    if (platformId === 'tiktok') {
+      connectTikTok();
+    } else {
+      alert(`${platformId} integration coming soon!`);
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Connecting to', selectedPlatform.name, formData);
-    setConnectedPlatforms([...connectedPlatforms, selectedPlatform.id]);
-    setShowModal(false);
+  const connectTikTok = () => {
+    try {
+      setLoading({ ...loading, tiktok: true });
+
+      // Generate random state for CSRF protection
+      const state = generateRandomState();
+      sessionStorage.setItem('tiktok_oauth_state', state);
+
+      // TikTok Shop authorization URL
+      const appKey = '6ii0898t7scdj'; // Your App Key
+      const redirectUri = 'https://selai.vercel.app/auth/tiktok/callback';
+      
+      const authUrl = `https://services.tiktokshop.com/open/authorize?` +
+        `app_key=${appKey}` +
+        `&state=${state}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+      // Redirect to TikTok authorization
+      window.location.href = authUrl;
+
+    } catch (error) {
+      console.error('Connect TikTok error:', error);
+      setLoading({ ...loading, tiktok: false });
+      alert('Failed to connect TikTok Shop');
+    }
   };
 
-  const isConnected = (platformId) => connectedPlatforms.includes(platformId);
+  const generateRandomState = () => {
+    return Math.random().toString(36).substring(2, 15) + 
+           Math.random().toString(36).substring(2, 15);
+  };
+
+  const handleDisconnect = (platformId) => {
+    if (confirm(`Disconnect ${platformId}?`)) {
+      setConnections({ ...connections, [platformId]: false });
+      alert(`${platformId} disconnected successfully!`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Hubungkan Toko Online Anda
+            Hubungkan Marketplace
           </h1>
           <p className="text-gray-600">
-            Kelola semua marketplace dalam satu dashboard dengan AI
+            Kelola semua toko online Anda dalam satu dashboard
           </p>
         </div>
 
+        {/* Info Banner */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 flex items-start gap-4">
           <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
           <div>
             <h3 className="font-semibold text-blue-900 mb-2">
-              Cara Mendapatkan API Keys
+              Cara Menghubungkan
             </h3>
-            <p className="text-blue-800 text-sm mb-3">
-              Setiap marketplace memiliki developer portal untuk mendapatkan API keys. 
-              Klik "Panduan Setup" pada setiap platform untuk instruksi lengkap.
-            </p>
-            <div className="flex gap-3 text-sm">
-              <span className="text-blue-700">⏱️ Waktu setup: 5-15 menit per platform</span>
-              <span className="text-blue-700">🔒 Data Anda aman dan terenkripsi</span>
-            </div>
+            <ol className="text-blue-800 text-sm space-y-1">
+              <li>1. Klik tombol "Hubungkan" pada marketplace yang ingin disambungkan</li>
+              <li>2. Login dengan akun seller marketplace Anda</li>
+              <li>3. Approve akses untuk Selai Platform</li>
+              <li>4. Selesai! Data Anda akan otomatis tersinkronisasi</li>
+            </ol>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Platform Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {platforms.map((platform) => {
-            const connected = isConnected(platform.id);
+            const isConnected = connections[platform.id];
+            const isLoading = loading[platform.id];
             
             return (
               <div
                 key={platform.id}
                 className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
               >
+                {/* Card Header */}
                 <div className={`bg-gradient-to-r ${platform.color} p-6 text-white`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -122,7 +136,7 @@ const MarketplaceConnection = () => {
                         <p className="text-white/80 text-sm">{platform.description}</p>
                       </div>
                     </div>
-                    {connected && (
+                    {isConnected && (
                       <div className="bg-white/20 backdrop-blur px-3 py-1 rounded-full flex items-center gap-2">
                         <Check className="w-4 h-4" />
                         <span className="text-sm font-medium">Terhubung</span>
@@ -131,60 +145,61 @@ const MarketplaceConnection = () => {
                   </div>
                 </div>
 
+                {/* Card Body */}
                 <div className="p-6">
-                  {connected ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-green-600">
-                        <Check className="w-5 h-5" />
-                        <span className="font-medium">Akun berhasil terhubung</span>
-                      </div>
-                      <div className="flex gap-3">
-                        <button className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                          Sinkronkan Data
-                        </button>
-                        <button className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
-                          Putuskan Koneksi
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <ul className="space-y-2 text-sm text-gray-600">
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                          Sinkronisasi produk otomatis
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                          Kelola pesanan dalam satu tempat
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                          Update stok real-time
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                          Analisis penjualan dengan AI
-                        </li>
+                  {platform.available ? (
+                    <>
+                      {/* Features */}
+                      <ul className="space-y-2 mb-6">
+                        {platform.features.map((feature, idx) => (
+                          <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                            {feature}
+                          </li>
+                        ))}
                       </ul>
-                      
-                      <div className="flex gap-3 pt-2">
+
+                      {/* Action Buttons */}
+                      {isConnected ? (
+                        <div className="space-y-3">
+                          <button
+                            onClick={() => alert('Sync feature coming soon!')}
+                            className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all font-medium"
+                          >
+                            Sinkronkan Data
+                          </button>
+                          <button
+                            onClick={() => handleDisconnect(platform.id)}
+                            className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all font-medium"
+                          >
+                            Putuskan Koneksi
+                          </button>
+                        </div>
+                      ) : (
                         <button
-                          onClick={() => handleConnect(platform)}
-                          className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2 font-medium"
+                          onClick={() => handleConnect(platform.id)}
+                          disabled={isLoading}
+                          className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Plus className="w-5 h-5" />
-                          Hubungkan
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              Menghubungkan...
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingBag className="w-5 h-5" />
+                              Hubungkan
+                            </>
+                          )}
                         </button>
-                        <a
-                          href={platform.tutorial}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          Panduan
-                        </a>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-gray-500 mb-4">Segera hadir!</p>
+                      <div className="inline-block px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm">
+                        Dalam pengembangan
                       </div>
                     </div>
                   )}
@@ -194,67 +209,47 @@ const MarketplaceConnection = () => {
           })}
         </div>
 
-        {showModal && selectedPlatform && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-4xl">{selectedPlatform.icon}</span>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Hubungkan {selectedPlatform.name}
-                  </h2>
-                  <p className="text-sm text-gray-600">
-                    Masukkan API credentials Anda
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {selectedPlatform.fields.map((field) => (
-                  <div key={field.name}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {field.label}
-                    </label>
-                    <input
-                      type={field.type}
-                      value={formData[field.name] || ''}
-                      onChange={(e) =>
-                        setFormData({ ...formData, [field.name]: e.target.value })
-                      }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
-                      placeholder={`Masukkan ${field.label}`}
-                    />
-                  </div>
-                ))}
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Catatan:</strong> Data API keys Anda akan disimpan dengan enkripsi 
-                    untuk keamanan maksimal.
-                  </p>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={handleSubmit}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium"
-                  >
-                    Hubungkan
-                  </button>
-                </div>
-              </div>
+        {/* Help Section */}
+        <div className="mt-12 bg-white rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Butuh Bantuan?
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-2">
+                📚 Dokumentasi
+              </h3>
+              <p className="text-gray-600 text-sm mb-3">
+                Panduan lengkap cara menghubungkan dan menggunakan integrasi marketplace
+              </p>
+              <a
+                href="#"
+                className="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-2"
+              >
+                Baca Dokumentasi
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-2">
+                💬 Support
+              </h3>
+              <p className="text-gray-600 text-sm mb-3">
+                Tim support kami siap membantu Anda 24/7
+              </p>
+              <a
+                href="#"
+                className="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-2"
+              >
+                Hubungi Support
+                <ExternalLink className="w-4 h-4" />
+              </a>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default MarketplaceConnection;
+export default ConnectMarketplace;
