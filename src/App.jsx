@@ -1,16 +1,31 @@
 // src/App.jsx
-// Minimal version - only using existing files
+// Fixed version - using proper LandingPage component
 
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { OrderProvider } from './context/OrderContext';
 import { ProductProvider } from './context/ProductContext';
 import { Toaster } from 'react-hot-toast';
 
-// Import only existing pages
+// Import existing pages
+import LandingPage from './pages/public/LandingPage';
+import LoginPage from './pages/public/LoginPage';
+import RegisterPage from './pages/public/RegisterPage';
 import TikTokCallback from './pages/auth/TikTokCallback';
 import ConnectMarketplace from './pages/seller/ConnectMarketplace';
+
+// Wrapper component untuk handle navigation di LandingPage
+function LandingPageWrapper() {
+  const navigate = useNavigate();
+  
+  return (
+    <LandingPage 
+      onNavigateToLogin={() => navigate('/login')}
+      onNavigateToRegister={() => navigate('/register')}
+    />
+  );
+}
 
 function App() {
   return (
@@ -45,30 +60,21 @@ function App() {
             />
 
             <Routes>
-              {/* Temporary landing page */}
+              {/* Landing Page - using proper component */}
               <Route 
                 path="/" 
-                element={
-                  <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-                    <div className="text-center">
-                      <h1 className="text-6xl font-bold text-gray-800 mb-4">
-                        Selai 🍓
-                      </h1>
-                      <p className="text-2xl text-gray-600 mb-8">
-                        Platform AI untuk Seller Online Shop
-                      </p>
-                      <p className="text-gray-500 mb-8">
-                        Kelola semua marketplace dalam satu dashboard
-                      </p>
-                      <a
-                        href="/connect"
-                        className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-medium text-lg"
-                      >
-                        Hubungkan Marketplace
-                      </a>
-                    </div>
-                  </div>
-                } 
+                element={<LandingPageWrapper />} 
+              />
+
+              {/* Auth Routes */}
+              <Route 
+                path="/login" 
+                element={<LoginPage />} 
+              />
+              
+              <Route 
+                path="/register" 
+                element={<RegisterPage />} 
               />
 
               {/* TikTok OAuth callback route */}
