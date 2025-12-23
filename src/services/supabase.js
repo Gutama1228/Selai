@@ -216,6 +216,48 @@ export const updateUserMetadata = async (metadata) => {
 };
 
 /**
+ * Update user profile (combines metadata and database profile)
+ * This is a convenience function used by Profile.jsx
+ */
+export const updateProfile = async (profileData) => {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) throw userError;
+    if (!user) throw new Error('User not authenticated');
+
+    // Update user metadata in auth
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: profileData
+    });
+
+    if (metadataError) throw metadataError;
+
+    // Also update in database if user_profiles table exists
+    try {
+      const { error: dbError } = await supabase
+        .from('user_profiles')
+        .update(profileData)
+        .eq('id', user.id);
+      
+      // Ignore error if table doesn't exist yet
+      if (dbError && !dbError.message.includes('does not exist')) {
+        console.warn('Database profile update warning:', dbError);
+      }
+    } catch (dbErr) {
+      // Silently handle database errors
+      console.warn('Database operation skipped:', dbErr);
+    }
+
+    return { data: { user }, error: null };
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
+/**
  * Verify OTP for email confirmation or password reset
  */
 export const verifyOTP = async (email, token, type = 'email') => {
