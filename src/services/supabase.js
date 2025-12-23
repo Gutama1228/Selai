@@ -318,6 +318,41 @@ export const signInWithProvider = async (provider) => {
 };
 
 // ================================
+// ADMIN FUNCTIONS
+// ================================
+
+/**
+ * Get all users (Admin only)
+ * Fetches all authenticated users from Supabase Auth
+ */
+export const getAllUsers = async () => {
+  try {
+    // Note: This requires admin API or service role key
+    // For now, we'll use a workaround by listing from user_profiles table
+    // In production, you should use Supabase Admin API
+    
+    const { data, error } = await supabase.auth.admin.listUsers();
+    
+    if (error) {
+      // Fallback: Try to get from database if admin API fails
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*');
+      
+      if (profileError) throw profileError;
+      
+      return { data: profileData, error: null };
+    }
+
+    return { data: data.users, error: null };
+  } catch (error) {
+    console.error('Get all users error:', error);
+    // Return empty array instead of null to prevent crashes
+    return { data: [], error: error.message };
+  }
+};
+
+// ================================
 // DATABASE HELPER FUNCTIONS
 // ================================
 
