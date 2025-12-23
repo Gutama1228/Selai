@@ -149,10 +149,10 @@ const TrendAnalysis = () => {
         <Card>
           <h3 className="font-bold text-gray-900 mb-3">💰 Price Points</h3>
           <ul className="space-y-2 text-sm text-gray-600">
-            <li>• Budget: < Rp 100K</li>
+            <li>• Budget: &lt; Rp 100K</li>
             <li>• Mid-range: Rp 100-500K</li>
             <li>• Premium: Rp 500K-1M</li>
-            <li>• Luxury: > Rp 1M</li>
+            <li>• Luxury: &gt; Rp 1M</li>
           </ul>
         </Card>
       </div>
