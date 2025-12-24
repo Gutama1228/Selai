@@ -3,7 +3,7 @@ import {
   BarChart3, MessageSquare, ShoppingBag, Package, 
   Edit, Image, TrendingUp, Settings, LogOut,
   Activity, Users, FileText, CreditCard, DollarSign, 
-  Shield, Database
+  Shield, Database, Link as LinkIcon
 } from 'lucide-react';
 
 /**
@@ -13,6 +13,13 @@ import {
 const Navigation = ({ role = 'seller', currentPage, onNavigate, onLogout }) => {
   const sellerMenu = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { 
+      id: 'connect', 
+      label: 'Hubungkan Marketplace', 
+      icon: LinkIcon,
+      badge: 'New',
+      highlight: true // Special styling
+    },
     { id: 'ai-chat', label: 'AI Chat', icon: MessageSquare, badge: 'AI' },
     { id: 'products', label: 'Produk', icon: ShoppingBag },
     { id: 'orders', label: 'Pesanan', icon: Package },
@@ -41,6 +48,7 @@ const Navigation = ({ role = 'seller', currentPage, onNavigate, onLogout }) => {
       {menu.map((item) => {
         const Icon = item.icon;
         const isActive = currentPage === item.id;
+        const isHighlight = item.highlight && !isActive;
 
         return (
           <button
@@ -49,15 +57,19 @@ const Navigation = ({ role = 'seller', currentPage, onNavigate, onLogout }) => {
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
               isActive
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                : isHighlight
+                ? 'bg-gradient-to-r from-orange-50 to-pink-50 text-orange-600 border-2 border-orange-200 hover:border-orange-300 hover:shadow-md'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
-            <Icon className="w-5 h-5 flex-shrink-0" />
+            <Icon className={`w-5 h-5 flex-shrink-0 ${isHighlight ? 'animate-pulse' : ''}`} />
             <span className="font-medium">{item.label}</span>
             {item.badge && (
-              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-semibold ${
                 isActive 
                   ? 'bg-white text-purple-600' 
+                  : item.badge === 'New'
+                  ? 'bg-orange-500 text-white animate-pulse'
                   : 'bg-purple-100 text-purple-600'
               }`}>
                 {item.badge}
