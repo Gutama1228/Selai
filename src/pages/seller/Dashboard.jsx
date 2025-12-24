@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { ShoppingBag, DollarSign, Package, TrendingUp, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShoppingBag, DollarSign, Package, TrendingUp, AlertCircle, Link as LinkIcon, Sparkles, X } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import { formatCurrency } from '../../utils/helpers';
@@ -16,9 +16,14 @@ import Badge from '../../components/common/Badge';
 const Dashboard = ({ onNavigate }) => {
   const { products, loading: productsLoading, getStatistics: getProductStats } = useProducts();
   const { orders, loading: ordersLoading, getStatistics: getOrderStats } = useOrders();
+  const [showConnectBanner, setShowConnectBanner] = useState(true);
 
   const productStats = getProductStats();
   const orderStats = getOrderStats();
+
+  // Check if user has connected any marketplace
+  // TODO: Replace with actual check from database/localStorage
+  const hasConnectedMarketplace = false;
 
   // Calculate actual rating from orders/reviews (if available)
   const calculateRating = () => {
@@ -52,6 +57,99 @@ const Dashboard = ({ onNavigate }) => {
           <p className="text-gray-600 mt-1">Selamat datang kembali! 👋</p>
         </div>
       </div>
+
+      {/* Connect Marketplace Banner - Show if not connected */}
+      {!hasConnectedMarketplace && showConnectBanner && (
+        <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 rounded-2xl shadow-2xl">
+          {/* Close Button */}
+          <button
+            onClick={() => setShowConnectBanner(false)}
+            className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors z-10"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Banner Content */}
+          <div className="relative p-8 md:p-10">
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+
+            <div className="relative grid md:grid-cols-2 gap-8 items-center">
+              {/* Left Content */}
+              <div className="text-white space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur rounded-full text-sm font-semibold">
+                  <Sparkles className="w-4 h-4" />
+                  Mulai Sekarang
+                </div>
+
+                <h2 className="text-3xl md:text-4xl font-bold leading-tight">
+                  Hubungkan Toko Anda & Kelola Semua dalam 1 Dashboard! 🚀
+                </h2>
+
+                <p className="text-white/90 text-lg">
+                  Sinkronkan produk dari TikTok Shop, Shopee, Lazada, dan Tokopedia. Kelola pesanan lebih mudah dan cepat!
+                </p>
+
+                <div className="flex flex-wrap gap-3 pt-4">
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onClick={() => onNavigate?.('connect')}
+                    leftIcon={<LinkIcon className="w-5 h-5" />}
+                    className="shadow-xl hover:shadow-2xl"
+                  >
+                    Hubungkan Marketplace
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="text-white border-white/30 hover:bg-white/10"
+                  >
+                    Lihat Cara Kerja
+                  </Button>
+                </div>
+
+                {/* Features List */}
+                <div className="pt-4 space-y-2">
+                  {[
+                    '✅ Sinkronisasi otomatis produk & stok',
+                    '✅ Kelola pesanan dari semua marketplace',
+                    '✅ Update massal & hemat waktu'
+                  ].map((feature, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-white/90">
+                      <span className="text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Content - Visual */}
+              <div className="hidden md:block">
+                <div className="relative">
+                  {/* Marketplace Icons */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { name: 'TikTok', icon: '⚫', color: 'from-gray-800 to-gray-900' },
+                      { name: 'Shopee', icon: '🟠', color: 'from-orange-500 to-red-500' },
+                      { name: 'Lazada', icon: '🔵', color: 'from-blue-500 to-blue-600' },
+                      { name: 'Tokopedia', icon: '🟢', color: 'from-green-500 to-green-600' }
+                    ].map((platform, idx) => (
+                      <div
+                        key={idx}
+                        className={`bg-white/20 backdrop-blur rounded-xl p-6 text-center hover:bg-white/30 transition-all cursor-pointer transform hover:scale-105`}
+                      >
+                        <div className="text-4xl mb-2">{platform.icon}</div>
+                        <div className="text-white font-semibold text-sm">{platform.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
