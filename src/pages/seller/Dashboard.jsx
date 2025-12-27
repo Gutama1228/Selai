@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ShoppingBag, DollarSign, Package, TrendingUp, AlertCircle, Link as LinkIcon, Sparkles, X } from 'lucide-react';
+import { ShoppingBag, DollarSign, Package, TrendingUp, AlertCircle, Link as LinkIcon, Sparkles, X, Clock } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import { formatCurrency } from '../../utils/helpers';
 import StatsCard from '../../components/seller/StatsCard';
-import ProductCard from '../../components/seller/ProductCard';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -16,20 +15,74 @@ import Badge from '../../components/common/Badge';
 const Dashboard = ({ onNavigate }) => {
   const { products, loading: productsLoading, getStatistics: getProductStats } = useProducts();
   const { orders, loading: ordersLoading, getStatistics: getOrderStats } = useOrders();
-  const [showConnectBanner, setShowConnectBanner] = useState(true);
+  const [showConnectBanner, setShowConnectBanner] = useState(false);
+  const [bannerAnimating, setBannerAnimating] = useState(false);
 
   const productStats = getProductStats();
   const orderStats = getOrderStats();
 
   // Check if user has connected any marketplace
-  // TODO: Replace with actual check from database/localStorage
+  // TODO: Replace with actual check from database
   const hasConnectedMarketplace = false;
+
+  // Check if banner should be shown based on localStorage
+  useEffect(() => {
+    if (hasConnectedMarketplace) {
+      setShowConnectBanner(false);
+      return;
+    }
+
+    const bannerData = localStorage.getItem('connectMarketplaceBanner');
+    
+    if (!bannerData) {
+      // First time - show banner with animation
+      setTimeout(() => {
+        setShowConnectBanner(true);
+        setBannerAnimating(true);
+      }, 500);
+      return;
+    }
+
+    try {
+      const { dismissedAt, remindLater } = JSON.parse(bannerData);
+      const now = Date.now();
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+
+      if (remindLater && (now - dismissedAt) < oneDayInMs) {
+        // Still within reminder period - don't show
+        setShowConnectBanner(false);
+      } else {
+        // Show banner again
+        setTimeout(() => {
+          setShowConnectBanner(true);
+          setBannerAnimating(true);
+        }, 500);
+      }
+    } catch (error) {
+      // If error parsing, show banner
+      setShowConnectBanner(true);
+      setBannerAnimating(true);
+    }
+  }, [hasConnectedMarketplace]);
+
+  const handleCloseBanner = (remindLater = false) => {
+    setBannerAnimating(false);
+    
+    setTimeout(() => {
+      setShowConnectBanner(false);
+      
+      // Save to localStorage
+      const bannerData = {
+        dismissedAt: Date.now(),
+        remindLater: remindLater
+      };
+      localStorage.setItem('connectMarketplaceBanner', JSON.stringify(bannerData));
+    }, 300);
+  };
 
   // Calculate actual rating from orders/reviews (if available)
   const calculateRating = () => {
     if (!orders || orders.length === 0) return null;
-    // TODO: Calculate from actual review data when implemented
-    // For now, return null for new users
     return null;
   };
 
@@ -58,27 +111,45 @@ const Dashboard = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Connect Marketplace Banner - Show if not connected */}
-      {!hasConnectedMarketplace && showConnectBanner && (
-        <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 rounded-2xl shadow-2xl">
-          {/* Close Button */}
-          <button
-            onClick={() => setShowConnectBanner(false)}
-            className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors z-10"
-          >
-            <X className="w-5 h-5" />
-          </button>
+      {/* Connect Marketplace Banner - Smart Display */}
+      {showConnectBanner && (
+        <div 
+          className={`relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 rounded-2xl shadow-2xl transition-all duration-300 ${
+            bannerAnimating ? 'animate-fadeIn' : 'opacity-0'
+          }`}
+          style={{
+            animation: bannerAnimating ? 'fadeInUp 0.5s ease-out' : 'none'
+          }}
+        >
+          {/* Close Buttons */}
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+            <button
+              onClick={() => handleCloseBanner(true)}
+              className="px-3 py-1.5 text-xs bg-white/20 hover:bg-white/30 backdrop-blur text-white rounded-lg transition-all flex items-center gap-1.5"
+              title="Ingatkan besok"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Besok</span>
+            </button>
+            <button
+              onClick={() => handleCloseBanner(false)}
+              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-all"
+              title="Tutup"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
           {/* Banner Content */}
-          <div className="relative p-8 md:p-10">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="relative p-6 md:p-10">
+            {/* Animated decorative elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
             <div className="relative grid md:grid-cols-2 gap-8 items-center">
               {/* Left Content */}
-              <div className="text-white space-y-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur rounded-full text-sm font-semibold">
+              <div className="text-white space-y-5">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-sm font-semibold animate-bounce">
                   <Sparkles className="w-4 h-4" />
                   Mulai Sekarang
                 </div>
@@ -87,65 +158,114 @@ const Dashboard = ({ onNavigate }) => {
                   Hubungkan Toko Anda & Kelola Semua dalam 1 Dashboard! 🚀
                 </h2>
 
-                <p className="text-white/90 text-lg">
+                <p className="text-white/90 text-base md:text-lg">
                   Sinkronkan produk dari TikTok Shop, Shopee, Lazada, dan Tokopedia. Kelola pesanan lebih mudah dan cepat!
                 </p>
 
-                <div className="flex flex-wrap gap-3 pt-4">
+                <div className="flex flex-wrap gap-3 pt-2">
                   <Button
                     variant="secondary"
                     size="lg"
-                    onClick={() => onNavigate?.('connect')}
+                    onClick={() => {
+                      handleCloseBanner(false);
+                      onNavigate?.('connect');
+                    }}
                     leftIcon={<LinkIcon className="w-5 h-5" />}
-                    className="shadow-xl hover:shadow-2xl"
+                    className="shadow-xl hover:shadow-2xl hover:scale-105 transition-transform"
                   >
-                    Hubungkan Marketplace
+                    Hubungkan Sekarang
                   </Button>
                   <Button
                     variant="ghost"
                     size="lg"
-                    className="text-white border-white/30 hover:bg-white/10"
+                    className="text-white border-white/30 hover:bg-white/10 hover:border-white/50 transition-all"
+                    onClick={() => handleCloseBanner(true)}
                   >
-                    Lihat Cara Kerja
+                    Nanti Saja
                   </Button>
                 </div>
 
-                {/* Features List */}
-                <div className="pt-4 space-y-2">
+                {/* Features List with animations */}
+                <div className="pt-4 space-y-2.5">
                   {[
-                    '✅ Sinkronisasi otomatis produk & stok',
-                    '✅ Kelola pesanan dari semua marketplace',
-                    '✅ Update massal & hemat waktu'
+                    { text: 'Sinkronisasi otomatis produk & stok', delay: '0.2s' },
+                    { text: 'Kelola pesanan dari semua marketplace', delay: '0.4s' },
+                    { text: 'Update massal & hemat waktu', delay: '0.6s' }
                   ].map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm">{feature}</span>
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-3 text-white/95"
+                      style={{
+                        animation: 'slideInLeft 0.5s ease-out',
+                        animationDelay: feature.delay,
+                        animationFillMode: 'both'
+                      }}
+                    >
+                      <div className="w-5 h-5 bg-white/30 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                      <span className="text-sm font-medium">{feature.text}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Right Content - Visual */}
+              {/* Right Content - Interactive Marketplace Cards */}
               <div className="hidden md:block">
-                <div className="relative">
-                  {/* Marketplace Icons */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { name: 'TikTok', icon: '⚫', color: 'from-gray-800 to-gray-900' },
-                      { name: 'Shopee', icon: '🟠', color: 'from-orange-500 to-red-500' },
-                      { name: 'Lazada', icon: '🔵', color: 'from-blue-500 to-blue-600' },
-                      { name: 'Tokopedia', icon: '🟢', color: 'from-green-500 to-green-600' }
-                    ].map((platform, idx) => (
-                      <div
-                        key={idx}
-                        className={`bg-white/20 backdrop-blur rounded-xl p-6 text-center hover:bg-white/30 transition-all cursor-pointer transform hover:scale-105`}
-                      >
-                        <div className="text-4xl mb-2">{platform.icon}</div>
-                        <div className="text-white font-semibold text-sm">{platform.name}</div>
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { name: 'TikTok', icon: '⚫', color: 'from-gray-800 to-gray-900', delay: '0.1s' },
+                    { name: 'Shopee', icon: '🟠', color: 'from-orange-500 to-red-500', delay: '0.2s' },
+                    { name: 'Lazada', icon: '🔵', color: 'from-blue-500 to-blue-600', delay: '0.3s' },
+                    { name: 'Tokopedia', icon: '🟢', color: 'from-green-500 to-green-600', delay: '0.4s' }
+                  ].map((platform, idx) => (
+                    <div
+                      key={idx}
+                      className="group bg-white/10 backdrop-blur-lg rounded-2xl p-6 text-center hover:bg-white/20 transition-all cursor-pointer transform hover:scale-110 hover:rotate-2 shadow-lg hover:shadow-2xl"
+                      style={{
+                        animation: 'fadeInScale 0.5s ease-out',
+                        animationDelay: platform.delay,
+                        animationFillMode: 'both'
+                      }}
+                    >
+                      <div className="text-5xl mb-3 transform group-hover:scale-125 transition-transform">
+                        {platform.icon}
                       </div>
-                    ))}
+                      <div className="text-white font-bold text-sm group-hover:text-base transition-all">
+                        {platform.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Connection indicator */}
+                <div className="mt-6 text-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white text-sm">
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                    <span>Belum terhubung</span>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Mobile Marketplace Preview */}
+          <div className="md:hidden px-6 pb-6">
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {[
+                { name: 'TikTok', icon: '⚫' },
+                { name: 'Shopee', icon: '🟠' },
+                { name: 'Lazada', icon: '🔵' },
+                { name: 'Tokopedia', icon: '🟢' }
+              ].map((platform, idx) => (
+                <div
+                  key={idx}
+                  className="flex-shrink-0 bg-white/10 backdrop-blur rounded-xl p-4 text-center min-w-[100px]"
+                >
+                  <div className="text-3xl mb-2">{platform.icon}</div>
+                  <div className="text-white font-semibold text-xs">{platform.name}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -377,6 +497,42 @@ const Dashboard = ({ onNavigate }) => {
           ))}
         </div>
       </Card>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 };
